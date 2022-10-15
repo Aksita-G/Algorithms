@@ -1,0 +1,190 @@
+# Python3 code for inserting element in skip list
+
+import random
+
+class Node(object):
+	'''
+	Class to implement node
+	'''
+	def __init__(self, key, level):
+		self.key = key
+
+		# list to hold references to node of different level
+		self.forward = [None]*(level+1)
+
+class SkipList(object):
+	'''
+	Class for Skip list
+	'''
+	def __init__(self, max_lvl, P):
+		# Maximum level for this skip list
+		self.MAXLVL = max_lvl
+
+		# P is the fraction of the nodes with level
+		# i references also having level i+1 references
+		self.P = P
+
+		# create header node and initialize key to -1
+		self.header = self.createNode(self.MAXLVL, -1)
+
+		# current level of skip list
+		self.level = 0
+	
+	# create new node
+	def createNode(self, lvl, key):
+		n = Node(key, lvl)
+		return n
+	
+	# create random level for node
+	def randomLevel(self):
+		lvl = 0
+		while random.random()<self.P and \
+			lvl<self.MAXLVL:lvl += 1
+		return lvl
+
+	# insert given key in skip list
+	def insertElement(self, key):
+		# create update array and initialize it
+		update = [None]*(self.MAXLVL+1)
+		current = self.header
+
+		'''
+		start from highest level of skip list
+		move the current reference forward while key
+		is greater than key of node next to current
+		Otherwise inserted current in update and
+		move one level down and continue search
+		'''
+		for i in range(self.level, -1, -1):
+			while current.forward[i] and \
+				current.forward[i].key < key:
+				current = current.forward[i]
+			update[i] = current
+
+		'''
+		reached level 0 and forward reference to
+		right, which is desired position to
+		insert key.
+		'''
+		current = current.forward[0]
+
+		'''
+		if current is NULL that means we have reached
+		to end of the level or current's key is not equal
+		to key to insert that means we have to insert
+		node between update[0] and current node
+	'''
+		if current == None or current.key != key:
+			# Generate a random level for node
+			rlevel = self.randomLevel()
+
+			'''
+			If random level is greater than list's current
+			level (node with highest level inserted in
+			list so far), initialize update value with reference
+			to header for further use
+			'''
+			if rlevel > self.level:
+				for i in range(self.level+1, rlevel+1):
+					update[i] = self.header
+				self.level = rlevel
+
+			# create new node with random level generated
+			n = self.createNode(rlevel, key)
+
+			# insert node by rearranging references
+			for i in range(rlevel+1):
+				n.forward[i] = update[i].forward[i]
+				update[i].forward[i] = n
+
+	# Display skip list level wise
+	def displayList(self):
+		print("\n*****Data******")
+		n=0
+		head = self.header
+		for lvl in range(self.level+1):
+			print("Level {}: ".format(lvl), end=" ")
+			node = head.forward[lvl]
+			while(node != None):
+				print(node.key, end=" ")
+				node = node.forward[lvl]
+				if(lvl==0):
+				    n=n+1
+			print("")
+		print("\n")
+		return n
+	def size(self):
+	    n=0
+	    head = self.header
+	    for lvl in range(0,1):
+	        node = head.forward[lvl]
+	        while(node != None):
+	            node = node.forward[lvl]
+	            n=n+1
+	    return n
+	def deleteElement(self, search_key):
+	    update = [None]*(self.MAXLVL+1)
+	    current = self.header
+	    for i in range(self.level, -1, -1):
+	        while(current.forward[i] and \
+	        current.forward[i].key < search_key):
+	            current = current.forward[i]
+	        update[i] = current
+	    current = current.forward[0]
+	    if current != None and current.key == search_key:
+	        for i in range(self.level+1):
+	            if update[i].forward[i] != current:
+	                break
+	            update[i].forward[i] = current.forward[i]
+	        while(self.level>0 and\
+	        self.header.forward[self.level] == None):
+	            self.level -= 1
+	def runmedian(self,n):
+	    i=0
+	    m=0
+	    med=-1
+	    med2=-1
+	    #print("size",n,end=" ")
+	    head=self.header
+	    if(n%2==0):
+	        med=int(n/2) -1 
+	        med2=int(n/2)
+	        #print("med, med2",med,med2,end=" ")
+	    else:
+	        med=int(n/2)
+	        #print("med odd",med,end=" ")
+	    for lvl in range(0,1):
+	        node = head.forward[lvl]
+	        while(node != None):
+	            if(i==med or i==med2):
+	                m+=node.key
+	            i=i+1
+	            node = node.forward[lvl]
+	    if(n%2==0):
+	        m=m/2
+	    return m
+
+# Driver to test above code
+
+lst = SkipList(3, 0.5)
+print("1-Enter number of persons watching advertisement\n2-Remove number of persons watching advertisement\n3-Display data\n4-Exit")
+ch=int(input())
+while(ch<=4):
+    if(ch==1):
+        print("Enter number of persons watching advertisement to be inserted")
+        x=int(input())
+        lst.insertElement(x)
+        n=lst.size()
+        print("\nMedian: ",lst.runmedian(n))
+    elif(ch==2):
+        print("Enter number of persons watching advertisement to be deleted ")
+        x=int(input())
+        lst.deleteElement(x)
+        n=lst.size()
+        print("\nMedian: ",lst.runmedian(n))
+    elif(ch==3):
+        lst.displayList()
+    elif(ch==4):
+        break
+    print("1-Enter data\n2-Remove data\n3-Display data\n4-Exit")
+    ch=int(input())
